@@ -31,24 +31,28 @@
       font-size: 1.1rem;
       font-weight: 500;
     }
+    ul {
+      margin-top: 0.5rem;
+      padding-left: 1rem;
+    }
+    li {
+      font-weight: 400;
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
   <h1>When is your child’s photo time?</h1>
-  <input list="nameList" id="nameInput" placeholder="Search by child name..." />
-  <datalist id="nameList"></datalist>
-
+  <input type="text" id="nameInput" placeholder="Search by child name..." />
   <select id="teamSelect">
     <option value="">Select team</option>
   </select>
-
   <div class="result" id="result"></div>
 
   <script>
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4fBZni39ZB07WVlx6v_DFDxn03Bo4xDMWx38tWfi_pyAqfBsxm2VsU9pgcZeRyxcmbPlP00-XVnpr/pub?gid=1768958071&single=true&output=csv";
 
     const nameInput = document.getElementById("nameInput");
-    const nameList = document.getElementById("nameList");
     const teamSelect = document.getElementById("teamSelect");
     const resultBox = document.getElementById("result");
 
@@ -58,23 +62,17 @@
       return str.trim().toLowerCase();
     }
 
-    function formatTime(raw) {
-      if (raw.includes("–")) {
-        const [start, end] = raw.split("–");
-        return `Sat 8/16, ${start.trim()}–${end.trim()}`;
-      }
-      return `Sat 8/16, ${raw.trim()}`;
-    }
-
     fetch(csvUrl)
       .then(response => response.text())
       .then(csv => {
         const rows = csv.split("\n").map(row => row.split(","));
         rows.shift(); // remove header
         data = rows.map(r => ({
-          name: r[0].trim(),
-          team: r[1].trim(),
-          time: r[2].trim()
+          name: r[0]?.trim(),
+          team: r[1]?.trim(),
+          day: r[2]?.trim(),
+          time: r[3]?.trim(),
+          location: r[4]?.trim()
         }));
 
         // Populate team dropdown
@@ -86,39 +84,36 @@
           teamSelect.appendChild(opt);
         });
 
-        // Populate datalist for autocomplete
-        data.forEach(d => {
-          const opt = document.createElement("option");
-          opt.value = d.name;
-          nameList.appendChild(opt);
-        });
+        function showTeamInfo(teamName) {
+          const matches = data.filter(d => sanitize(d.team) === sanitize(teamName));
+          if (matches.length > 0) {
+            const { day, time, location } = matches[0];
+            const kids = matches.map(m => `<li>${m.name}</li>`).join("");
+            resultBox.innerHTML = `
+              <div>${day} | ${time} | ${location}</div>
+              <ul>${kids}</ul>
+            `;
+          } else {
+            resultBox.textContent = "No team info found.";
+          }
+        }
 
         // Name input lookup
         nameInput.addEventListener("input", () => {
           const query = sanitize(nameInput.value);
           const match = data.find(d => sanitize(d.name) === query);
           if (match) {
-            resultBox.textContent = `${match.name}: ${formatTime(match.time)}`;
-            teamSelect.value = "";
+            showTeamInfo(match.team);
+            teamSelect.value = match.team;
           }
         });
 
         // Team dropdown lookup
         teamSelect.addEventListener("change", () => {
-          const team = sanitize(teamSelect.value);
-          const matches = data.filter(d => sanitize(d.team) === team);
-
-          if (matches.length > 0) {
-            const time = matches[0].time;
-            const kids = matches.map(d => d.name).sort();
-            resultBox.innerHTML = `
-              <strong>${matches[0].team}:</strong><br />
-              ${formatTime(time)}<br /><br />
-              ${kids.map(name => `• ${name}`).join("<br />")}
-            `;
+          const team = teamSelect.value;
+          if (team) {
+            showTeamInfo(team);
             nameInput.value = "";
-          } else {
-            resultBox.textContent = "No match found.";
           }
         });
       });
