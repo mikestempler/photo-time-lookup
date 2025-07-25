@@ -99,14 +99,22 @@
         }
 
         // Name input lookup
-        nameInput.addEventListener("input", () => {
-          const query = sanitize(nameInput.value);
-          const match = data.find(d => sanitize(d.name) === query);
-          if (match) {
-            showTeamInfo(match.team);
-            teamSelect.value = match.team;
-          }
-        });
+    nameInput.addEventListener("input", () => {
+  const query = sanitize(nameInput.value);
+  if (query.length < 2) return;
+
+  const matches = data.filter(d => sanitize(d.name).includes(query));
+  if (matches.length === 1) {
+    const match = matches[0];
+    showTeamInfo(match.team);
+    teamSelect.value = match.team;
+  } else {
+    resultBox.textContent = matches.length === 0
+      ? "No matching name found."
+      : "Keep typing to narrow it down...";
+  }
+});
+
 
         // Team dropdown lookup
         teamSelect.addEventListener("change", () => {
