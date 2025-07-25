@@ -26,9 +26,6 @@
       border: 1px solid #ccc;
       border-radius: 4px;
     }
-    datalist option {
-      font-size: 1rem;
-    }
     .result {
       margin-top: 1.5rem;
       font-size: 1.1rem;
@@ -38,7 +35,7 @@
 </head>
 <body>
   <h1>When is your child’s photo time?</h1>
-  <input type="text" id="nameInput" placeholder="Search by child name..." list="nameList" />
+  <input list="nameList" id="nameInput" placeholder="Search by child name..." />
   <datalist id="nameList"></datalist>
 
   <select id="teamSelect">
@@ -61,16 +58,23 @@
       return str.trim().toLowerCase();
     }
 
+    function formatTime(raw) {
+      if (raw.includes("–")) {
+        const [start, end] = raw.split("–");
+        return `Sat 8/16, ${start.trim()}–${end.trim()}`;
+      }
+      return `Sat 8/16, ${raw.trim()}`;
+    }
+
     fetch(csvUrl)
       .then(response => response.text())
       .then(csv => {
         const rows = csv.split("\n").map(row => row.split(","));
         rows.shift(); // remove header
         data = rows.map(r => ({
-          name: r[0]?.trim() ?? "",
-          team: r[1]?.trim() ?? "",
-          time: r[2]?.trim() ?? "",
-          day: r[3]?.trim() ?? ""
+          name: r[0].trim(),
+          team: r[1].trim(),
+          time: r[2].trim()
         }));
 
         // Populate team dropdown
@@ -82,23 +86,20 @@
           teamSelect.appendChild(opt);
         });
 
-        // Populate datalist for name autocomplete
-        const names = [...new Set(data.map(d => d.name))].sort();
-        names.forEach(name => {
+        // Populate datalist for autocomplete
+        data.forEach(d => {
           const opt = document.createElement("option");
-          opt.value = name;
+          opt.value = d.name;
           nameList.appendChild(opt);
         });
 
-        // Name input search
+        // Name input lookup
         nameInput.addEventListener("input", () => {
           const query = sanitize(nameInput.value);
           const match = data.find(d => sanitize(d.name) === query);
           if (match) {
-            resultBox.textContent = `${match.name}: ${match.day}, ${match.time}`;
+            resultBox.textContent = `${match.name}: ${formatTime(match.time)}`;
             teamSelect.value = "";
-          } else {
-            resultBox.textContent = "";
           }
         });
 
@@ -106,16 +107,21 @@
         teamSelect.addEventListener("change", () => {
           const team = sanitize(teamSelect.value);
           const matches = data.filter(d => sanitize(d.team) === team);
+
           if (matches.length > 0) {
-            const times = matches.map(m => `${m.name}: ${m.day}, ${m.time}`).join("<br>");
-            resultBox.innerHTML = times;
+            const time = matches[0].time;
+            const kids = matches.map(d => d.name).sort();
+            resultBox.innerHTML = `
+              <strong>${matches[0].team}:</strong><br />
+              ${formatTime(time)}<br /><br />
+              ${kids.map(name => `• ${name}`).join("<br />")}
+            `;
             nameInput.value = "";
           } else {
-            resultBox.textContent = "";
+            resultBox.textContent = "No match found.";
           }
         });
       });
   </script>
 </body>
 </html>
-
