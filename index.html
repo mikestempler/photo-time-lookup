@@ -1,158 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Photo Time Lookup</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      padding: 2rem;
-      max-width: 700px;
-      margin: auto;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      background: #fff;
       color: #333;
-    }
-    h1 {
-      font-size: 1.8rem;
+      padding: 2rem;
+      margin: 0;
     }
     input, select {
-      font-size: 1rem;
+      font-size: 1.25rem;
       padding: 0.5rem;
-      width: 100%;
       margin-bottom: 1rem;
+      width: 100%;
+      max-width: 600px;
+      display: block;
     }
-    ul {
-      padding-left: 1.2rem;
-    }
-    ul li {
-      margin: 0.3rem 0;
-    }
-    .result {
-      font-weight: bold;
+    .result, .team-section {
       margin-top: 1rem;
     }
-    .suggestions {
-      border: 1px solid #ccc;
-      max-height: 150px;
-      overflow-y: auto;
-      margin-top: -1rem;
-      background: white;
-      position: absolute;
-      width: calc(100% - 2rem);
-      z-index: 1000;
+    .team-name {
+      font-weight: bold;
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
     }
-    .suggestions div {
-      padding: 0.5rem;
-      cursor: pointer;
+    .time-location {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
     }
-    .suggestions div:hover {
-      background: #eee;
+    .player-list.one-column li {
+      width: 100%;
+    }
+    .player-list.two-columns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .player-list.two-columns li {
+      width: calc(50% - 0.5rem);
+    }
+    @media (max-width: 600px) {
+      .player-list.two-columns li {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
+  <input type="text" id="nameInput" placeholder="Search by child name...">
+  <select id="teamDropdown">
+    <option value="">Select team</option>
+  </select>
+  <div id="result" class="result"></div>
+  <div id="teamInfo" class="team-section"></div>
 
-<!-- <h2>When is your child’s photo time?</h2> -->
+  <script>
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4fBZni39ZB07WVlx6v_DFDxn03Bo4xDMWx38tWfi_pyAqfBsxm2VsU9pgcZeRyxcmbPlP00-XVnpr/pub?gid=1768958071&single=true&output=csv";
 
-<input type="text" id="nameInput" placeholder="Search by child name..." autocomplete="off">
-<div id="suggestions" class="suggestions" style="display: none;"></div>
+    let data = [];
 
-<select id="teamSelect">
-  <option value="">Select team</option>
-</select>
+    fetch(csvUrl)
+      .then(response => response.text())
+      .then(csvText => {
+        const rows = csvText.split("\n").map(row => row.split(","));
+        const headers = rows.shift();
+        data = rows.map(row => Object.fromEntries(row.map((cell, i) => [headers[i].trim(), cell.trim()])));
+        populateTeamDropdown();
+      });
 
-<div id="output"></div>
+    function populateTeamDropdown() {
+      const teams = Array.from(new Set(data.map(d => d.Team).filter(Boolean))).sort();
+      const dropdown = document.getElementById("teamDropdown");
+      teams.forEach(team => {
+        const option = document.createElement("option");
+        option.value = team;
+        option.textContent = team;
+        dropdown.appendChild(option);
+      });
+    }
 
-<script>
-const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4fBZni39ZB07WVlx6v_DFDxn03Bo4xDMWx38tWfi_pyAqfBsxm2VsU9pgcZeRyxcmbPlP00-XVnpr/pub?gid=1768958071&single=true&output=csv";
-
-let data = [];
-let names = [];
-let teams = new Set();
-
-fetch(csvUrl)
-  .then(response => response.text())
-  .then(text => {
-    const rows = text.trim().split("\n").slice(1); // Skip headers
-    data = rows.map(row => {
-      const [name, team, date, time, location] = row.split(",");
-      names.push(name.trim());
-      teams.add(team.trim());
-      return { name: name.trim(), team: team.trim(), date: date.trim(), time: time.trim(), location: location.trim() };
+    document.getElementById("nameInput").addEventListener("input", function () {
+      const input = this.value.toLowerCase();
+      const resultDiv = document.getElementById("result");
+      const matches = data.filter(d => d.Name.toLowerCase().includes(input));
+      if (matches.length === 1) {
+        const match = matches[0];
+        resultDiv.innerHTML = `<strong>${match.Name}:</strong> ${match.Day} | ${match.Time} | ${match.Location}`;
+      } else {
+        resultDiv.innerHTML = input.length ? `<em>Keep typing to narrow it down...</em>` : "";
+      }
     });
-    populateTeamDropdown();
-  });
 
-function populateTeamDropdown() {
-  const teamSelect = document.getElementById("teamSelect");
-  [...teams].sort().forEach(team => {
-    const option = document.createElement("option");
-    option.value = team;
-    option.textContent = team;
-    teamSelect.appendChild(option);
-  });
-}
+    document.getElementById("teamDropdown").addEventListener("change", function () {
+      const selectedTeam = this.value;
+      const teamData = data.filter(d => d.Team === selectedTeam);
+      const teamDiv = document.getElementById("teamInfo");
+      if (!selectedTeam || teamData.length === 0) {
+        teamDiv.innerHTML = "";
+        return;
+      }
+      const sample = teamData[0];
+      const listClass = teamData.length > 10 ? "two-columns" : "one-column";
+      const playerList = teamData.map(d => `<li>${d.Name}</li>`).join("");
 
-document.getElementById("nameInput").addEventListener("input", function() {
-  const input = this.value.toLowerCase();
-  const suggestionsBox = document.getElementById("suggestions");
-  suggestionsBox.innerHTML = "";
-  if (!input) return suggestionsBox.style.display = "none";
-
-  const matches = names.filter(n => n.toLowerCase().includes(input));
-  if (matches.length === 0) return suggestionsBox.style.display = "none";
-
-  matches.slice(0, 10).forEach(name => {
-    const div = document.createElement("div");
-    div.textContent = name;
-    div.onclick = () => {
-      document.getElementById("nameInput").value = name;
-      suggestionsBox.style.display = "none";
-      showResultByName(name);
-    };
-    suggestionsBox.appendChild(div);
-  });
-
-  suggestionsBox.style.display = "block";
-});
-
-document.addEventListener("click", (e) => {
-  if (!document.getElementById("suggestions").contains(e.target) &&
-      e.target.id !== "nameInput") {
-    document.getElementById("suggestions").style.display = "none";
-  }
-});
-
-document.getElementById("teamSelect").addEventListener("change", function() {
-  const team = this.value;
-  showResultByTeam(team);
-});
-
-function showResultByName(name) {
-  const match = data.find(entry => entry.name.toLowerCase() === name.toLowerCase());
-  const output = document.getElementById("output");
-  if (match) {
-    output.innerHTML = `<div class="result">${match.name}: ${match.date} | ${match.time} | ${match.location}</div>`;
-  } else {
-    output.innerHTML = `<div class="result">Name not found.</div>`;
-  }
-}
-
-function showResultByTeam(team) {
-  const matches = data.filter(entry => entry.team === team);
-  const output = document.getElementById("output");
-  if (matches.length > 0) {
-    const { date, time, location } = matches[0];
-    const listItems = matches.map(m => `<li>${m.name}</li>`).join("");
-    output.innerHTML = `
-      <div class="result">${team}:</div>
-      <div class="result">${date} | ${time} | ${location}</div>
-      <ul>${listItems}</ul>
-    `;
-  } else {
-    output.innerHTML = `<div class="result">Team not found.</div>`;
-  }
-}
-</script>
-
+      teamDiv.innerHTML = `
+        <div class="team-name">${sample.Team}:</div>
+        <div class="time-location">${sample.Day} | ${sample.Time} | ${sample.Location}</div>
+        <ul class="player-list ${listClass}">${playerList}</ul>
+      `;
+    });
+  </script>
 </body>
 </html>
