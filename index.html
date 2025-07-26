@@ -10,9 +10,19 @@
       color: #424242;
       padding: 2rem;
       background: #fff;
-      max-width: 600px;
-      margin: auto;
+      margin: 0;
     }
+
+    .container {
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 40px 20px;
+      background-color: white;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
     input, select {
       width: 100%;
       padding: 0.75rem;
@@ -20,7 +30,9 @@
       font-size: 1rem;
       border: 1px solid #ccc;
       border-radius: 4px;
+      box-sizing: border-box;
     }
+
     .result {
       margin-top: 1.5rem;
       font-size: 1.1rem;
@@ -29,38 +41,19 @@
       padding: 1rem;
       border-radius: 4px;
     }
-    .container {
-  max-width: 500px;
-  margin: 40px auto;
-  padding: 40px 20px;
-  background-color: white;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-input[type="text"], select {
-  width: 100%;
-  max-width: 100%;
-  padding: 12px 16px;
-  margin: 10px 0;
-  font-size: 16px;
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  box-sizing: border-box;
-}
-
   </style>
 </head>
 <body>
-  <input list="nameList" id="nameInput" placeholder="Search by child name..." />
-  <datalist id="nameList"></datalist>
+  <div class="container">
+    <input list="nameList" id="nameInput" placeholder="Search by child name..." />
+    <datalist id="nameList"></datalist>
 
-  <select id="teamSelect">
-    <option value="">Select team</option>
-  </select>
+    <select id="teamSelect">
+      <option value="">Select team</option>
+    </select>
 
-  <div class="result" id="result"></div>
+    <div class="result" id="result"></div>
+  </div>
 
   <script>
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4fBZni39ZB07WVlx6v_DFDxn03Bo4xDMWx38tWfi_pyAqfBsxm2VsU9pgcZeRyxcmbPlP00-XVnpr/pub?gid=1768958071&single=true&output=csv";
