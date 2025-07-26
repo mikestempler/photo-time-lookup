@@ -64,7 +64,6 @@
     }
   </style>
 </head>
-
 <body>
   <div class="container">
     <input type="text" list="nameList" id="nameInput" placeholder="Search by child name..." />
@@ -95,7 +94,6 @@
 
     function displayResult(entry) {
       resultBox.textContent = `${entry.day} | ${entry.time} | ${entry.location}`;
-      teamNameDisplay.textContent = entry.team;
     }
 
     fetch(csvUrl)
@@ -133,6 +131,7 @@
           if (match) {
             displayResult(match);
             teamSelect.value = "";
+            teamNameDisplay.textContent = match.team;
           }
         });
 
@@ -143,6 +142,7 @@
           if (match) {
             displayResult(match);
             nameInput.value = "";
+            teamNameDisplay.textContent = match.team;
           }
         });
       });
