@@ -5,39 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Photo Time Lookup</title>
   <style>
-    body {
-      font-family: 'Helvetica Neue', sans-serif;
-      color: #424242;
-      padding: 2rem;
-      background: #fff;
-      margin: 0;
-    }
+body {
+  font-family: 'Helvetica Neue', sans-serif;
+  color: #424242;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Full viewport height */
+}
 
-   .container {
+.container {
   max-width: 500px;
-  margin: 20px auto;
-  padding: 24px 16px;
+  width: 100%;
+  padding: 20px;
   background-color: white;
   border-radius: 12px;
   text-align: center;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin: 0 auto;
 }
 
-@media (max-width: 480px) {
-  .container {
-    padding: 16px 12px;
-    margin: 12px auto;
-  }
+input[type="text"], select {
+  width: 100%;
+  padding: 12px 16px;
+  margin: 10px 0;
+  font-size: 16px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
 
-  input, select {
-    font-size: 1rem;
-    padding: 10px;
-  }
-
-  .result {
-    font-size: 1rem;
-    padding: 0.75rem;
-  }
+.result {
+  margin-top: 20px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 8px;
 }
 
 
