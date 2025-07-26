@@ -13,15 +13,33 @@
       margin: 0;
     }
 
-    .container {
-      max-width: 500px;
-      margin: 20px auto;
-      padding: 24px 16px;
-      background-color: white;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
+   .container {
+  max-width: 500px;
+  margin: 20px auto;
+  padding: 24px 16px;
+  background-color: white;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 16px 12px;
+    margin: 12px auto;
+  }
+
+  input, select {
+    font-size: 1rem;
+    padding: 10px;
+  }
+
+  .result {
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+}
+
 
     input, select {
       width: 100%;
