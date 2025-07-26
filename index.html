@@ -136,18 +136,19 @@
           }
         });
 
-       teamSelect.addEventListener("change", () => {
+teamSelect.addEventListener("change", () => {
   const team = sanitize(teamSelect.value);
   const match = data.find(d => sanitize(d.team) === team);
   if (match) {
-    // Set team name above result
-    const teamLabel = document.getElementById("teamNameDisplay");
-    if (teamLabel) teamLabel.textContent = match.team;
-
     displayResult(match);
     nameInput.value = "";
+    
+    // Show team name
+    const teamNameDisplay = document.getElementById("teamNameDisplay");
+    teamNameDisplay.textContent = match.team;
   }
 });
+
 
         });
       });
