@@ -6,113 +6,95 @@
   <title>Photo Time Lookup</title>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-      background: #fff;
-      color: #333;
+      font-family: 'Helvetica Neue', sans-serif;
+      color: #424242;
       padding: 2rem;
-      margin: 0;
-    }
-    input, select {
-      font-size: 1.25rem;
-      padding: 0.5rem;
-      margin-bottom: 1rem;
-      width: 100%;
+      background: #ffffff;
       max-width: 600px;
-      display: block;
+      margin: auto;
     }
-    .result, .team-section {
-      margin-top: 1rem;
-    }
-    .team-name {
-      font-weight: bold;
-      font-size: 1.25rem;
-      margin-bottom: 0.25rem;
-    }
-    .time-location {
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-    }
-    .player-list.one-column li {
+
+    input, select {
       width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
     }
-    .player-list.two-columns {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    .player-list.two-columns li {
-      width: calc(50% - 0.5rem);
-    }
-    @media (max-width: 600px) {
-      .player-list.two-columns li {
-        width: 100%;
-      }
+
+    .result {
+      margin-top: 1.5rem;
+      font-size: 1.1rem;
+      font-weight: 500;
+      background: #f7f7f7;
+      padding: 1rem;
+      border-radius: 6px;
     }
   </style>
 </head>
 <body>
-  <input type="text" id="nameInput" placeholder="Search by child name...">
-  <select id="teamDropdown">
+  <input type="text" id="nameInput" placeholder="Search by child name..." />
+  <select id="teamSelect">
     <option value="">Select team</option>
   </select>
-  <div id="result" class="result"></div>
-  <div id="teamInfo" class="team-section"></div>
+  <div class="result" id="result"></div>
 
   <script>
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4fBZni39ZB07WVlx6v_DFDxn03Bo4xDMWx38tWfi_pyAqfBsxm2VsU9pgcZeRyxcmbPlP00-XVnpr/pub?gid=1768958071&single=true&output=csv";
 
+    const nameInput = document.getElementById("nameInput");
+    const teamSelect = document.getElementById("teamSelect");
+    const resultBox = document.getElementById("result");
+
     let data = [];
+
+    function sanitize(str) {
+      return str.trim().toLowerCase();
+    }
 
     fetch(csvUrl)
       .then(response => response.text())
-      .then(csvText => {
-        const rows = csvText.split("\n").map(row => row.split(","));
-        const headers = rows.shift();
-        data = rows.map(row => Object.fromEntries(row.map((cell, i) => [headers[i].trim(), cell.trim()])));
-        populateTeamDropdown();
+      .then(csv => {
+        const rows = csv.split("\n").map(row => row.split(","));
+        rows.shift(); // remove header
+        data = rows.map(r => ({
+          name: r[0].trim(),
+          team: r[1].trim(),
+          day: r[2].trim(),
+          time: r[3].trim(),
+          location: r[4].trim()
+        }));
+
+        // Populate team dropdown
+        const teams = [...new Set(data.map(d => d.team))].sort();
+        teams.forEach(team => {
+          const opt = document.createElement("option");
+          opt.value = team;
+          opt.textContent = team;
+          teamSelect.appendChild(opt);
+        });
+
+        // Name search with suggestion
+        nameInput.addEventListener("input", () => {
+          const query = sanitize(nameInput.value);
+          const match = data.find(d => sanitize(d.name) === query);
+          if (match) {
+            resultBox.innerHTML = `${match.day} | ${match.time} | ${match.location}`;
+            teamSelect.value = "";
+          }
+        });
+
+        // Team dropdown
+        teamSelect.addEventListener("change", () => {
+          const team = sanitize(teamSelect.value);
+          const match = data.find(d => sanitize(d.team) === team);
+          if (match) {
+            resultBox.innerHTML = `${match.day} | ${match.time} | ${match.location}`;
+            nameInput.value = "";
+          }
+        });
       });
-
-    function populateTeamDropdown() {
-      const teams = Array.from(new Set(data.map(d => d.Team).filter(Boolean))).sort();
-      const dropdown = document.getElementById("teamDropdown");
-      teams.forEach(team => {
-        const option = document.createElement("option");
-        option.value = team;
-        option.textContent = team;
-        dropdown.appendChild(option);
-      });
-    }
-
-    document.getElementById("nameInput").addEventListener("input", function () {
-      const input = this.value.toLowerCase();
-      const resultDiv = document.getElementById("result");
-      const matches = data.filter(d => d.Name.toLowerCase().includes(input));
-      if (matches.length === 1) {
-        const match = matches[0];
-        resultDiv.innerHTML = `<strong>${match.Name}:</strong> ${match.Day} | ${match.Time} | ${match.Location}`;
-      } else {
-        resultDiv.innerHTML = input.length ? `<em>Keep typing to narrow it down...</em>` : "";
-      }
-    });
-
-    document.getElementById("teamDropdown").addEventListener("change", function () {
-      const selectedTeam = this.value;
-      const teamData = data.filter(d => d.Team === selectedTeam);
-      const teamDiv = document.getElementById("teamInfo");
-      if (!selectedTeam || teamData.length === 0) {
-        teamDiv.innerHTML = "";
-        return;
-      }
-      const sample = teamData[0];
-      const listClass = teamData.length > 10 ? "two-columns" : "one-column";
-      const playerList = teamData.map(d => `<li>${d.Name}</li>`).join("");
-
-      teamDiv.innerHTML = `
-        <div class="team-name">${sample.Team}:</div>
-        <div class="time-location">${sample.Day} | ${sample.Time} | ${sample.Location}</div>
-        <ul class="player-list ${listClass}">${playerList}</ul>
-      `;
-    });
   </script>
 </body>
 </html>
