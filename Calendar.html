@@ -149,8 +149,15 @@ teamSelect.addEventListener("change", () => {
 });
 
 function createCalendarLink(entry) {
-  const startDate = "20250817"; // YYYYMMDD
-  const startTime = entry.time.replace(":", "") + "00"; // HHMMSS
+  const dateParts = entry.date.match(/(\d{1,2})\/(\d{1,2})/); // matches MM/DD
+  const month = dateParts[1].padStart(2, "0");
+  const day = dateParts[2].padStart(2, "0");
+  const startDate = `2025${month}${day}`; // Always 2025
+  const timeParts = entry.time.match(/(\d{1,2}):(\d{2})/); // matches HH:MM
+  const hour = timeParts[1].padStart(2, "0");
+  const minute = timeParts[2];
+  const startTime = `${hour}${minute}00`; // HHMMSS
+
 
   let location = "";
   if (entry.location.toLowerCase().includes("resolute")) {
@@ -167,7 +174,7 @@ function createCalendarLink(entry) {
   const resultBox = document.getElementById("result");
   const calendarLink = document.createElement("a");
   calendarLink.href = link;
-  calendarLink.textContent = "➕ Add to Calendar";
+  calendarLink.textContent = "📅 Add to Calendar";
   calendarLink.target = "_blank";
   calendarLink.style.display = "block";
   calendarLink.style.marginTop = "1rem";
