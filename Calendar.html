@@ -153,11 +153,11 @@ function createCalendarLink(entry) {
   const month = dateParts[1].padStart(2, "0");
   const day = dateParts[2].padStart(2, "0");
   const startDate = `2025${month}${day}`; // Always 2025
+
   const timeParts = entry.time.match(/(\d{1,2}):(\d{2})/); // matches HH:MM
   const hour = timeParts[1].padStart(2, "0");
   const minute = timeParts[2];
   const startTime = `${hour}${minute}00`; // HHMMSS
-
 
   let location = "";
   if (entry.location.toLowerCase().includes("resolute")) {
@@ -179,9 +179,12 @@ function createCalendarLink(entry) {
   calendarLink.style.display = "block";
   calendarLink.style.marginTop = "1rem";
 
+  // Clear any existing link first
+  const oldLink = resultBox.querySelector("a");
+  if (oldLink) oldLink.remove();
+
   resultBox.appendChild(calendarLink);
 }
-
 
         });
   </script>
