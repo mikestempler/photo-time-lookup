@@ -148,6 +148,17 @@ teamSelect.addEventListener("change", () => {
   }
 });
 
+function parseTimeTo24hr(timeStr) {
+  const timeParts = timeStr.match(/(\d{1,2}):(\d{2})/);
+  if (!timeParts) return null;
+  let hour = parseInt(timeParts[1], 10);
+  const minute = timeParts[2];
+  // Assume PM if hour < 8 and not 12
+  if (hour < 8 && hour !== 12) hour += 12;
+  const hourStr = hour.toString().padStart(2, "0");
+  return { hourStr, minute };
+}
+
 function createCalendarLink(entry) {
   const dateParts = (entry.date || entry.day).match(/(\d{1,2})\/(\d{1,2})/);
   if (!dateParts) return;
@@ -155,22 +166,12 @@ function createCalendarLink(entry) {
   const day = dateParts[2].padStart(2, "0");
   const startDate = `2025${month}${day}`;
 
-  const timeParts = entry.time.match(/(\d{1,2}):(\d{2})/);
-  if (!timeParts) return;
-  let hour = parseInt(timeParts[1], 10);
-  const minute = timeParts[2];
+  const startParsed = parseTimeTo24hr(entry.time);
+  const endParsed = parseTimeTo24hr(entry.endtime);
+  if (!startParsed || !endParsed) return;
 
-  // Assume PM for hours before 8, unless 12 (which is already PM)
-  if (hour < 8 && hour !== 12) hour += 12;
-  const hourStr = hour.toString().padStart(2, "0");
-  const startTime = `${hourStr}${minute}00`;
-
-  // Add 15 minutes for end time
-  const startDateTime = new Date(`2025-${month}-${day}T${hourStr}:${minute}:00`);
-  const endDateTime = new Date(startDateTime.getTime() + 15 * 60000);
-  const endHour = endDateTime.getHours().toString().padStart(2, "0");
-  const endMinute = endDateTime.getMinutes().toString().padStart(2, "0");
-  const endTime = `${endHour}${endMinute}00`;
+  const startTime = `${startParsed.hourStr}${startParsed.minute}00`;
+  const endTime = `${endParsed.hourStr}${endParsed.minute}00`;
 
   let location = "";
   const loc = entry.location.toLowerCase();
@@ -197,8 +198,8 @@ function createCalendarLink(entry) {
   calendarLink.style.display = "block";
   calendarLink.style.marginTop = "1rem";
 
-  resultBox.appendChild(calendarLink);
-}
+  resultBox.appendCh
+
 
       });
   </script>
