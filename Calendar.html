@@ -125,66 +125,81 @@
           teamSelect.appendChild(opt);
         });
 
-               // Name input lookup
-        nameInput.addEventListener("input", () => {
-          const match = data.find(d => sanitize(d.name) === sanitize(nameInput.value));
-          if (match) {
-            displayResult(match);
-            teamNameDisplay.textContent = match.team;
-            createCalendarLink(match);
-            teamSelect.value = "";
-          }
-        });
+// Name input lookup
+nameInput.addEventListener("input", () => {
+  const match = data.find(d => sanitize(d.name) === sanitize(nameInput.value));
+  if (match) {
+    displayResult(match);
+    teamNameDisplay.textContent = match.team;
+    createCalendarLink(match);
+    teamSelect.value = "";
+  }
+});
 
-        // Team dropdown lookup
-        teamSelect.addEventListener("change", () => {
-          const team = sanitize(teamSelect.value);
-          const match = data.find(d => sanitize(d.team) === team);
-          if (match) {
-            displayResult(match);
-            teamNameDisplay.textContent = match.team;
-            createCalendarLink(match);
-            nameInput.value = "";
-          }
-        });
+// Team dropdown lookup
+teamSelect.addEventListener("change", () => {
+  const team = sanitize(teamSelect.value);
+  const match = data.find(d => sanitize(d.team) === team);
+  if (match) {
+    displayResult(match);
+    teamNameDisplay.textContent = match.team;
+    createCalendarLink(match);
+    nameInput.value = "";
+  }
+});
 
-        function createCalendarLink(entry) {
-          const dateParts = (entry.date || entry.day).match(/(\d{1,2})\/(\d{1,2})/); // matches MM/DD
-          const month = dateParts[1].padStart(2, "0");
-          const day = dateParts[2].padStart(2, "0");
-          const startDate = `2025${month}${day}`; // Always 2025
+function createCalendarLink(entry) {
+  const dateParts = (entry.date || entry.day).match(/(\d{1,2})\/(\d{1,2})/);
+  if (!dateParts) return;
+  const month = dateParts[1].padStart(2, "0");
+  const day = dateParts[2].padStart(2, "0");
+  const startDate = `2025${month}${day}`;
 
-          const timeParts = entry.time.match(/(\d{1,2}):(\d{2})/); // matches HH:MM
-          const hour = timeParts[1].padStart(2, "0");
-          const minute = timeParts[2];
-          const startTime = `${hour}${minute}00`; // HHMMSS
+  const timeParts = entry.time.match(/(\d{1,2}):(\d{2})/);
+  if (!timeParts) return;
+  let hour = parseInt(timeParts[1], 10);
+  const minute = timeParts[2];
 
-          let location = "";
-          if (entry.location.toLowerCase().includes("resolute")) {
-            location = "3599 Chiller Ln, Columbus, OH 43219";
-          } else if (entry.location.toLowerCase().includes("thompson")) {
-            location = "5600 Thompson Rd, New Albany, OH 43054";
-          }
+  // Assume PM for hours before 8, unless 12 (which is already PM)
+  if (hour < 8 && hour !== 12) hour += 12;
+  const hourStr = hour.toString().padStart(2, "0");
+  const startTime = `${hourStr}${minute}00`;
 
-          const details = encodeURIComponent("See you there!");
-          const locationEncoded = encodeURIComponent(location);
-          const title = encodeURIComponent("Sporting Columbus Picture Day");
-          const link = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}T${startTime}/${startDate}T${startTime}&details=${details}&location=${locationEncoded}`;
+  // Add 15 minutes for end time
+  const startDateTime = new Date(`2025-${month}-${day}T${hourStr}:${minute}:00`);
+  const endDateTime = new Date(startDateTime.getTime() + 15 * 60000);
+  const endHour = endDateTime.getHours().toString().padStart(2, "0");
+  const endMinute = endDateTime.getMinutes().toString().padStart(2, "0");
+  const endTime = `${endHour}${endMinute}00`;
 
-          const resultBox = document.getElementById("result");
-          const calendarLink = document.createElement("a");
-          calendarLink.href = link;
-          calendarLink.textContent = "📅 Add to Calendar";
-          calendarLink.target = "_blank";
-          calendarLink.style.display = "block";
-          calendarLink.style.marginTop = "1rem";
+  let location = "";
+  const loc = entry.location.toLowerCase();
+  if (loc.includes("resolute")) {
+    location = "3599 Chiller Ln, Columbus, OH 43219";
+  } else if (loc.includes("thompson")) {
+    location = "5600 Thompson Rd, New Albany, OH 43054";
+  }
 
-          // Clear any existing link first
-          const oldLink = resultBox.querySelector("a");
-          if (oldLink) oldLink.remove();
+  const title = encodeURIComponent("Sporting Columbus Picture Day");
+  const details = encodeURIComponent("See you there!");
+  const locationEncoded = encodeURIComponent(location);
+  const link = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}T${startTime}/${startDate}T${endTime}&details=${details}&location=${locationEncoded}`;
 
-          resultBox.appendChild(calendarLink);
-        }
+  const resultBox = document.getElementById("result");
+  const existing = resultBox.querySelector("a.add-to-calendar");
+  if (existing) existing.remove();
+
+  const calendarLink = document.createElement("a");
+  calendarLink.href = link;
+  calendarLink.textContent = "📅 Add to Calendar";
+  calendarLink.target = "_blank";
+  calendarLink.className = "add-to-calendar";
+  calendarLink.style.display = "block";
+  calendarLink.style.marginTop = "1rem";
+
+  resultBox.appendChild(calendarLink);
+}
+
       });
   </script>
 </body>
