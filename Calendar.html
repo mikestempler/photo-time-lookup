@@ -136,20 +136,19 @@
   }
 });
 
-          }
-        });
+// Team dropdown lookup
+teamSelect.addEventListener("change", () => {
+  const team = sanitize(teamSelect.value);
+  const match = data.find(d => sanitize(d.team) === team);
+  if (match) {
+    displayResult(match);
+    teamNameDisplay.textContent = match.team;
+    createCalendarLink(match);
+    nameInput.value = "";
+  }
+});
 
-        // Team dropdown lookup
-        teamSelect.addEventListener("change", () => {
-          const team = sanitize(teamSelect.value);
-          const match = data.find(d => sanitize(d.team) === team);
-          if (match) {
-            displayResult(match);
-            teamNameDisplay.textContent = match.team;
-            createCalendarLink(match); // new
-            nameInput.value = "";
-          }
-       function createCalendarLink(entry) {
+function createCalendarLink(entry) {
   const startDate = "20250817"; // YYYYMMDD
   const startTime = entry.time.replace(":", "") + "00"; // HHMMSS
 
@@ -175,6 +174,7 @@
 
   resultBox.appendChild(calendarLink);
 }
+
 
         });
   </script>
