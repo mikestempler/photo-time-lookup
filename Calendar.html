@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Time Lookup</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      color: #424242;
+      margin: 0;
+      padding: 2rem 1rem;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        max-width: 95vw;
+        padding: 20px 10px;
+      }
+
+      input[type="text"], select, .result {
+        font-size: 16px;
+      }
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 12px 16px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    .result {
+      margin-top: .5rem;
+      font-size: 1.1rem;
+      font-weight: 500;
+      background: transparent;
+      padding: .5rem;
+      border-radius: 0;
+    }
+
+    .team-label {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-top: 1.5rem;
+      background: none;
+      padding: 0;
+      border-radius: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <input type="text" list="nameList" id="nameInput" placeholder="Search by child name..." />
+    <datalist id="nameList"></datalist>
+
+    <select id="teamSelect">
+      <option value="">Select team</option>
+    </select>
+
+    <div class="result team-label" id="teamNameDisplay"></div>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4fBZni39ZB07WVlx6v_DFDxn03Bo4xDMWx38tWfi_pyAqfBsxm2VsU9pgcZeRyxcmbPlP00-XVnpr/pub?gid=1768958071&single=true&output=csv";
+
+    const nameInput = document.getElementById("nameInput");
+    const nameList = document.getElementById("nameList");
+    const teamSelect = document.getElementById("teamSelect");
+    const resultBox = document.getElementById("result");
+    const teamNameDisplay = document.getElementById("teamNameDisplay");
+
+    let data = [];
+
+    function sanitize(str) {
+      return str.trim().toLowerCase();
+    }
+
+    function displayResult(entry) {
+      resultBox.textContent = `${entry.day} | ${entry.time} | ${entry.location}`;
+    }
+
+    fetch(csvUrl)
+      .then(response => response.text())
+      .then(csv => {
+        const rows = csv.split("\n").map(row => row.split(","));
+        rows.shift(); // remove header
+        data = rows.map(r => ({
+          name: r[0].trim(),
+          team: r[1].trim(),
+          day: r[2].trim(),
+          time: r[3].trim(),
+          location: r[4].trim()
+        }));
+
+        // Populate datalist for name autocomplete
+        data.forEach(d => {
+          const option = document.createElement("option");
+          option.value = d.name;
+          nameList.appendChild(option);
+        });
+
+        // Populate team dropdown
+        const teams = [...new Set(data.map(d => d.team))].sort();
+        teams.forEach(team => {
+          const opt = document.createElement("option");
+          opt.value = team;
+          opt.textContent = team;
+          teamSelect.appendChild(opt);
+        });
+
+        // Name input lookup
+        nameInput.addEventListener("input", () => {
+          const match = data.find(d => sanitize(d.name) === sanitize(nameInput.value));
+          if (match) {
+            displayResult(match);
+            teamNameDisplay.textContent = match.team;
+            createCalendarLink(match); // new
+            teamSelect.value = "";
+  }
+});
+
+          }
+        });
+
+        // Team dropdown lookup
+        teamSelect.addEventListener("change", () => {
+          const team = sanitize(teamSelect.value);
+          const match = data.find(d => sanitize(d.team) === team);
+          if (match) {
+            displayResult(match);
+            teamNameDisplay.textContent = match.team;
+            createCalendarLink(match); // new
+            nameInput.value = "";
+          }
+       function createCalendarLink(entry) {
+  const startDate = "20250817"; // YYYYMMDD
+  const startTime = entry.time.replace(":", "") + "00"; // HHMMSS
+
+  let location = "";
+  if (entry.location.toLowerCase().includes("resolute")) {
+    location = "3599 Chiller Ln, Columbus, OH 43219";
+  } else if (entry.location.toLowerCase().includes("thompson")) {
+    location = "5600 Thompson Rd, New Albany, OH 43054";
+  }
+
+  const details = encodeURIComponent("See you there!");
+  const locationEncoded = encodeURIComponent(location);
+  const title = encodeURIComponent("Sporting Columbus Picture Day");
+  const link = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}T${startTime}/${startDate}T${startTime}&details=${details}&location=${locationEncoded}`;
+
+  const resultBox = document.getElementById("result");
+  const calendarLink = document.createElement("a");
+  calendarLink.href = link;
+  calendarLink.textContent = "➕ Add to Calendar";
+  calendarLink.target = "_blank";
+  calendarLink.style.display = "block";
+  calendarLink.style.marginTop = "1rem";
+
+  resultBox.appendChild(calendarLink);
+}
+
+        });
+  </script>
+</body>
+</html>
