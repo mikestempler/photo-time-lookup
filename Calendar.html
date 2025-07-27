@@ -125,68 +125,67 @@
           teamSelect.appendChild(opt);
         });
 
-        // Name input lookup
+               // Name input lookup
         nameInput.addEventListener("input", () => {
           const match = data.find(d => sanitize(d.name) === sanitize(nameInput.value));
           if (match) {
             displayResult(match);
             teamNameDisplay.textContent = match.team;
-            createCalendarLink(match); // new
+            createCalendarLink(match);
             teamSelect.value = "";
-  }
-});
-
-// Team dropdown lookup
-teamSelect.addEventListener("change", () => {
-  const team = sanitize(teamSelect.value);
-  const match = data.find(d => sanitize(d.team) === team);
-  if (match) {
-    displayResult(match);
-    teamNameDisplay.textContent = match.team;
-    createCalendarLink(match);
-    nameInput.value = "";
-  }
-});
-
-function createCalendarLink(entry) {
-  const dateParts = entry.date.match(/(\d{1,2})\/(\d{1,2})/); // matches MM/DD
-  const month = dateParts[1].padStart(2, "0");
-  const day = dateParts[2].padStart(2, "0");
-  const startDate = `2025${month}${day}`; // Always 2025
-
-  const timeParts = entry.time.match(/(\d{1,2}):(\d{2})/); // matches HH:MM
-  const hour = timeParts[1].padStart(2, "0");
-  const minute = timeParts[2];
-  const startTime = `${hour}${minute}00`; // HHMMSS
-
-  let location = "";
-  if (entry.location.toLowerCase().includes("resolute")) {
-    location = "3599 Chiller Ln, Columbus, OH 43219";
-  } else if (entry.location.toLowerCase().includes("thompson")) {
-    location = "5600 Thompson Rd, New Albany, OH 43054";
-  }
-
-  const details = encodeURIComponent("See you there!");
-  const locationEncoded = encodeURIComponent(location);
-  const title = encodeURIComponent("Sporting Columbus Picture Day");
-  const link = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}T${startTime}/${startDate}T${startTime}&details=${details}&location=${locationEncoded}`;
-
-  const resultBox = document.getElementById("result");
-  const calendarLink = document.createElement("a");
-  calendarLink.href = link;
-  calendarLink.textContent = "📅 Add to Calendar";
-  calendarLink.target = "_blank";
-  calendarLink.style.display = "block";
-  calendarLink.style.marginTop = "1rem";
-
-  // Clear any existing link first
-  const oldLink = resultBox.querySelector("a");
-  if (oldLink) oldLink.remove();
-
-  resultBox.appendChild(calendarLink);
-}
-
+          }
         });
+
+        // Team dropdown lookup
+        teamSelect.addEventListener("change", () => {
+          const team = sanitize(teamSelect.value);
+          const match = data.find(d => sanitize(d.team) === team);
+          if (match) {
+            displayResult(match);
+            teamNameDisplay.textContent = match.team;
+            createCalendarLink(match);
+            nameInput.value = "";
+          }
+        });
+
+        function createCalendarLink(entry) {
+          const dateParts = (entry.date || entry.day).match(/(\d{1,2})\/(\d{1,2})/); // matches MM/DD
+          const month = dateParts[1].padStart(2, "0");
+          const day = dateParts[2].padStart(2, "0");
+          const startDate = `2025${month}${day}`; // Always 2025
+
+          const timeParts = entry.time.match(/(\d{1,2}):(\d{2})/); // matches HH:MM
+          const hour = timeParts[1].padStart(2, "0");
+          const minute = timeParts[2];
+          const startTime = `${hour}${minute}00`; // HHMMSS
+
+          let location = "";
+          if (entry.location.toLowerCase().includes("resolute")) {
+            location = "3599 Chiller Ln, Columbus, OH 43219";
+          } else if (entry.location.toLowerCase().includes("thompson")) {
+            location = "5600 Thompson Rd, New Albany, OH 43054";
+          }
+
+          const details = encodeURIComponent("See you there!");
+          const locationEncoded = encodeURIComponent(location);
+          const title = encodeURIComponent("Sporting Columbus Picture Day");
+          const link = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}T${startTime}/${startDate}T${startTime}&details=${details}&location=${locationEncoded}`;
+
+          const resultBox = document.getElementById("result");
+          const calendarLink = document.createElement("a");
+          calendarLink.href = link;
+          calendarLink.textContent = "📅 Add to Calendar";
+          calendarLink.target = "_blank";
+          calendarLink.style.display = "block";
+          calendarLink.style.marginTop = "1rem";
+
+          // Clear any existing link first
+          const oldLink = resultBox.querySelector("a");
+          if (oldLink) oldLink.remove();
+
+          resultBox.appendChild(calendarLink);
+        }
+      });
   </script>
 </body>
 </html>
